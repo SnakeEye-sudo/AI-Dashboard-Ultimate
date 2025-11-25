@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Dashboard Ultimate - Real-time Data Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            animation: fadeIn 1s ease-in;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .card-icon {
+            font-size: 2em;
+            margin-right: 15px;
+        }
+
+        .card-title {
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+
+        .card-content {
+            color: white;
+            line-height: 1.6;
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.1em;
+            padding: 20px;
+        }
+
+        .weather-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .temperature {
+            font-size: 3em;
+            font-weight: bold;
+        }
+
+        .crypto-item, .news-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .crypto-item:last-child, .news-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .price-up {
+            color: #4ade80;
+        }
+
+        .price-down {
+            color: #f87171;
+        }
+
+        .quote-text {
+            font-size: 1.3em;
+            font-style: italic;
+            margin-bottom: 15px;
+            line-height: 1.8;
+        }
+
+        .quote-author {
+            text-align: right;
+            font-weight: 600;
+            opacity: 0.8;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .error {
+            color: #fca5a5;
+            padding: 10px;
+            border-radius: 5px;
+            background: rgba(255, 0, 0, 0.1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 AI Dashboard Ultimate</h1>
+        <p>Real-time Data from Multiple Free APIs</p>
+    </div>
+
+    <div class="dashboard">
+        <!-- Weather Card -->
+        <div class="card" id="weather-card">
+            <div class="card-header">
+                <span class="card-icon">🌤️</span>
+                <h2 class="card-title">Weather</h2>
+            </div>
+            <div class="card-content" id="weather-content">
+                <div class="loading">Loading weather...</div>
+            </div>
+        </div>
+
+        <!-- Crypto Card -->
+        <div class="card" id="crypto-card">
+            <div class="card-header">
+                <span class="card-icon">💰</span>
+                <h2 class="card-title">Crypto Prices</h2>
+            </div>
+            <div class="card-content" id="crypto-content">
+                <div class="loading">Loading crypto data...</div>
+            </div>
+        </div>
+
+        <!-- Quote Card -->
+        <div class="card" id="quote-card">
+            <div class="card-header">
+                <span class="card-icon">💭</span>
+                <h2 class="card-title">Quote of the Day</h2>
+            </div>
+            <div class="card-content" id="quote-content">
+                <div class="loading">Loading quote...</div>
+            </div>
+            <button class="btn" onclick="loadQuote()">New Quote</button>
+        </div>
+
+        <!-- News Card -->
+        <div class="card" id="news-card">
+            <div class="card-header">
+                <span class="card-icon">📰</span>
+                <h2 class="card-title">Latest News</h2>
+            </div>
+            <div class="card-content" id="news-content">
+                <div class="loading">Loading news...</div>
+            </div>
+        </div>
+
+        <!-- Fun Fact Card -->
+        <div class="card" id="fact-card">
+            <div class="card-header">
+                <span class="card-icon">🎯</span>
+                <h2 class="card-title">Random Fact</h2>
+            </div>
+            <div class="card-content" id="fact-content">
+                <div class="loading">Loading fact...</div>
+            </div>
+            <button class="btn" onclick="loadFact()">New Fact</button>
+        </div>
+
+        <!-- GitHub Stats Card -->
+        <div class="card" id="github-card">
+            <div class="card-header">
+                <span class="card-icon">💻</span>
+                <h2 class="card-title">GitHub Stats</h2>
+            </div>
+            <div class="card-content" id="github-content">
+                <div class="loading">Loading GitHub data...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Weather API
+        async function loadWeather() {
+            try {
+                const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=25.59&longitude=85.13&current_weather=true');
+                const data = await response.json();
+                const weather = data.current_weather;
+                
+                document.getElementById('weather-content').innerHTML = `
+                    <div class="weather-info">
+                        <div>
+                            <div class="temperature">${weather.temperature}°C</div>
+                            <p>Wind: ${weather.windspeed} km/h</p>
+                            <p>Patna, Bihar</p>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('weather-content').innerHTML = '<div class="error">Error loading weather data</div>';
+            }
+        }
+
+        // Crypto API
+        async function loadCrypto() {
+            try {
+                const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,cardano&vs_currencies=usd&include_24hr_change=true');
+                const data = await response.json();
+                
+                let html = '';
+                Object.keys(data).forEach(coin => {
+                    const price = data[coin].usd;
+                    const change = data[coin].usd_24h_change;
+                    const isPositive = change >= 0;
+                    html += `
+                        <div class="crypto-item">
+                            <strong>${coin.toUpperCase()}</strong>
+                            <div>$${price.toLocaleString()}</div>
+                            <div class="${isPositive ? 'price-up' : 'price-down'}">
+                                ${isPositive ? '▲' : '▼'} ${Math.abs(change).toFixed(2)}%
+                            </div>
+                        </div>
+                    `;
+                });
+                document.getElementById('crypto-content').innerHTML = html;
+            } catch (error) {
+                document.getElementById('crypto-content').innerHTML = '<div class="error">Error loading crypto data</div>';
+            }
+        }
+
+        // Quote API
+        async function loadQuote() {
+            try {
+                const response = await fetch('https://api.quotable.io/random');
+                const data = await response.json();
+                
+                document.getElementById('quote-content').innerHTML = `
+                    <div class="quote-text">"${data.content}"</div>
+                    <div class="quote-author">— ${data.author}</div>
+                `;
+            } catch (error) {
+                document.getElementById('quote-content').innerHTML = '<div class="error">Error loading quote</div>';
+            }
+        }
+
+        // News API
+        async function loadNews() {
+            try {
+                const response = await fetch('https://saurav.tech/NewsAPI/top-headlines/category/technology/in.json');
+                const data = await response.json();
+                
+                let html = '';
+                data.articles.slice(0, 4).forEach(article => {
+                    html += `
+                        <div class="news-item">
+                            <strong>${article.title}</strong>
+                            <p style="margin-top: 8px; opacity: 0.8; font-size: 0.9em;">${article.description || 'No description'}</p>
+                        </div>
+                    `;
+                });
+                document.getElementById('news-content').innerHTML = html;
+            } catch (error) {
+                document.getElementById('news-content').innerHTML = '<div class="error">Error loading news</div>';
+            }
+        }
+
+        // Fun Fact API
+        async function loadFact() {
+            try {
+                const response = await fetch('https://uselessfacts.jsph.pl/random.json?language=en');
+                const data = await response.json();
+                
+                document.getElementById('fact-content').innerHTML = `
+                    <div style="font-size: 1.1em; line-height: 1.8;">${data.text}</div>
+                `;
+            } catch (error) {
+                document.getElementById('fact-content').innerHTML = '<div class="error">Error loading fact</div>';
+            }
+        }
+
+        // GitHub Stats API
+        async function loadGitHub() {
+            try {
+                const response = await fetch('https://api.github.com/users/SnakeEye-sudo');
+                const data = await response.json();
+                
+                document.getElementById('github-content').innerHTML = `
+                    <div style="line-height: 2;">
+                        <p><strong>Username:</strong> ${data.login}</p>
+                        <p><strong>Repositories:</strong> ${data.public_repos}</p>
+                        <p><strong>Followers:</strong> ${data.followers}</p>
+                        <p><strong>Following:</strong> ${data.following}</p>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('github-content').innerHTML = '<div class="error">Error loading GitHub data</div>';
+            }
+        }
+
+        // Load all data on page load
+        window.onload = function() {
+            loadWeather();
+            loadCrypto();
+            loadQuote();
+            loadNews();
+            loadFact();
+            loadGitHub();
+            
+            // Refresh data every 5 minutes
+            setInterval(() => {
+                loadWeather();
+                loadCrypto();
+                loadNews();
+                loadGitHub();
+            }, 300000);
+        };
+    </script>
+</body>
+</html>
